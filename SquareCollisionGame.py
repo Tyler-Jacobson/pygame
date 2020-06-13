@@ -7,10 +7,10 @@ pygame.init()
 WIDTH = 800
 HEIGHT = 600
 
-BLUE = (0,0,255)
-RED = (255,0,0)
-YELLOW = (255, 255, 0)
-BACKGROUND_COLOR = (0,0,0)
+PLAYER_COLOR = (118, 158, 203)
+ENEMY_COLOR = (179, 153, 212)
+SCORE_COLOR = (123, 143, 165)
+BACKGROUND_COLOR = (245, 225, 253)
 
 player_size = 50
 player_pos = [WIDTH/2, HEIGHT-2*player_size]
@@ -38,14 +38,14 @@ def set_level(score, SPEED):
 
 def drop_enemies(enemy_list):
     delay = random.random()
-    if len(enemy_list) < 15 and delay < 0.05:
+    if len(enemy_list) < 15 and delay < 0.1:
         x_pos = random.randint(0, WIDTH - enemy_size)
         y_pos = 0
         enemy_list.append([x_pos, y_pos])
 
 def draw_enemies(enemy_list):
     for enemy_pos in enemy_list:
-        pygame.draw.rect(screen, RED, (enemy_pos[0], enemy_pos[1], enemy_size, enemy_size))
+        pygame.draw.rect(screen, ENEMY_COLOR, (enemy_pos[0], enemy_pos[1], enemy_size, enemy_size))
 
 def update_enemy_positions(enemy_list, score):
     for idx,enemy_pos in enumerate(enemy_list):
@@ -111,7 +111,7 @@ while not game_over:
     SPEED = set_level(score, SPEED)
     
     text = 'Score: ' + str(score)
-    label = myFont.render(text, 1, YELLOW)
+    label = myFont.render(text, 1, SCORE_COLOR)
     screen.blit(label, (WIDTH-200, HEIGHT-40))
 
     if collision_check(enemy_list, player_pos):
@@ -120,7 +120,7 @@ while not game_over:
     draw_enemies(enemy_list)
     
 
-    pygame.draw.rect(screen, BLUE, (player_pos[0], player_pos[1], player_size, player_size))
+    pygame.draw.rect(screen, PLAYER_COLOR, (player_pos[0], player_pos[1], player_size, player_size))
 
     clock.tick(60)
 
