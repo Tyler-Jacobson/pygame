@@ -51,7 +51,6 @@ def update_enemy_positions(enemy_list, score):
     for idx,enemy_pos in enumerate(enemy_list):
         if enemy_pos[1] >= 0 and enemy_pos[1] < HEIGHT:
             enemy_pos[1] += SPEED
-        
         else:
             enemy_list.pop(idx)
             score += 1
@@ -89,12 +88,12 @@ while not game_over:
             y = player_pos[1]
 
             if event.key == pygame.K_a:
-
-                x -= player_size
+                if x > 0:
+                    x -= player_size
 
             elif event.key == pygame.K_d:
-
-                x += player_size
+                if x < WIDTH - player_size:
+                    x += player_size
             
             player_pos = [x, y]
     
@@ -105,6 +104,7 @@ while not game_over:
     #checks for collision
     if detect_collision(player_pos, enemy_pos):
         game_over = True
+        break
 
     drop_enemies(enemy_list)
     score = update_enemy_positions(enemy_list, score)
