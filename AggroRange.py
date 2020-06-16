@@ -14,6 +14,9 @@ enemy_y = 200
 enemy_size = 20
 aggro_range = 200
 
+enemy_2_x = 600
+enemy_2_y = 100
+
 PLAYER_COLOR = (0,0,255)
 ENEMY_COLOR = (255,0,0)
 AGGRO_RANGE_COLOR = (0,255,0)
@@ -24,7 +27,7 @@ game_over = False
 
 clock = pygame.time.Clock()
 
-enemy_list = [(enemy_x, enemy_y)]
+enemy_list = [[enemy_x, enemy_y], [enemy_2_x, enemy_2_y]]
 
 def in_aggro_range(player_x, player_y, aggro_box_x, aggro_box_y, aggro_box_size):
     if player_x >= aggro_box_x and player_x <= aggro_box_x + aggro_box_size:
@@ -53,26 +56,29 @@ while not game_over:
     
     if keys[pygame.K_s]:
         player_y += 3
-
-    aggro_box_x = enemy_x - (aggro_range / 2)
-    aggro_box_y = enemy_y - (aggro_range / 2)
-    aggro_box_size = enemy_size + aggro_range
-
-    if in_aggro_range(player_x, player_y, aggro_box_x, aggro_box_y, aggro_box_size):
-        if player_x > enemy_x:
-            enemy_x += 1
-        if player_x < enemy_x:
-            enemy_x -= 1
-        if player_y > enemy_y:
-            enemy_y += 1
-        if player_y < enemy_y:
-            enemy_y -= 1
-
-
-
+    
     screen.fill((0,0,0))
-    pygame.draw.rect(screen, (AGGRO_RANGE_COLOR), (aggro_box_x, aggro_box_y, aggro_box_size, aggro_box_size))
-    pygame.draw.rect(screen, (ENEMY_COLOR), (enemy_x, enemy_y, enemy_size, enemy_size))
+    for x,y in enemy_list:
+
+        aggro_box_x = x - (aggro_range / 2)
+        aggro_box_y = y - (aggro_range / 2)
+        aggro_box_size = enemy_size + aggro_range
+
+        if in_aggro_range(player_x, player_y, aggro_box_x, aggro_box_y, aggro_box_size):
+            if player_x > x:
+                x += 1
+            if player_x < x:
+                x -= 1
+            if player_y > y:
+                y += 1
+            if player_y < y:
+                y -= 1
+
+
+
+    
+        pygame.draw.rect(screen, (AGGRO_RANGE_COLOR), (aggro_box_x, aggro_box_y, aggro_box_size, aggro_box_size))
+        pygame.draw.rect(screen, (ENEMY_COLOR), (x, y, enemy_size, enemy_size))
 
     pygame.draw.rect(screen, (PLAYER_COLOR), (player_x, player_y, player_size, player_size))
     
@@ -83,4 +89,3 @@ while not game_over:
 
 pygame.quit()
 sys.exit()
-
