@@ -92,7 +92,7 @@ def detect_collisions(player_pos, enemy_list, enemy_size):
 def lose_health(player_health, current_time, time_hit):
     current_time = time.time()
 
-    if current_time > time_hit[0] + 3:
+    if current_time > time_hit[0] + 1:
         player_health[0] -= 1
         time_hit[0] = time.time()
 
@@ -100,6 +100,12 @@ def lose_health(player_health, current_time, time_hit):
 
         if player_health[0] <= 0:
             return True
+
+def draw_health(player_health):
+    for health in range(0, player_health[0]):
+        pygame.draw.circle(screen, (200,50,50), (20 + (health * 30), 20), 10)
+        
+
     
 
 
@@ -120,10 +126,13 @@ while not game_over:
 
     move_player(player_pos)
 
+    draw_health(player_health)
+
 
     if detect_collisions(player_pos, enemy_list, enemy_size):
         if lose_health(player_health, current_time, time_hit):
             game_over = True
+        
         
 
 
