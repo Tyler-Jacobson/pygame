@@ -11,11 +11,14 @@ player_x = player_pos[0]
 player_y = player_pos[1]
 player_size = 20
 player_health = [3]
+PLAYER_SPEED = 3
 
 enemy_x = 200
 enemy_y = 200
 enemy_size = 20
+enemy_speed = 1
 aggro_range = 200
+ENEMY_SPAWN_DISTANCE = 200
 
 enemy_2_x = 600
 enemy_2_y = 100
@@ -33,47 +36,53 @@ clock = pygame.time.Clock()
 current_time = 0
 time_hit = [10]
 
-enemy_list = [[enemy_x, enemy_y], [enemy_2_x, enemy_2_y], [600, 600]]
+enemy_list = []
+# [enemy_x, enemy_y], [enemy_2_x, enemy_2_y], [600, 600]
 
+# Checks if the player's location (player_pos[0] + (player_size / 2)) is greater than the far left edge of the aggro box, and less than 
+# the far right edge. If this is the case for the x coordinate, the same is then checked for the y coordinate. If both are true, the player 
+# must be inside of the enemy's aggro box, and True is returned
 def in_aggro_range(player_pos, aggro_box_x, aggro_box_y, aggro_box_size):
-    if player_pos[0] >= aggro_box_x and player_pos[0] <= aggro_box_x + aggro_box_size:
-        if player_pos[1] >= aggro_box_y and player_pos[1] <= aggro_box_y + aggro_box_size:
+    if player_pos[0] + (player_size / 2) >= aggro_box_x and player_pos[0] + (player_size / 2) <= aggro_box_x + aggro_box_size:
+        if player_pos[1] + (player_size / 2) >= aggro_box_y and player_pos[1] + (player_size / 2) <= aggro_box_y + aggro_box_size:
             return True
     return False
 
-def move_enemies(enemy_list, player_pos):
-    for pos in enemy_list:
 
-        aggro_box_x = pos[0] - (aggro_range / 2)
-        aggro_box_y = pos[1] - (aggro_range / 2)
+def move_enemies(enemy_list, player_pos, enemy_speed):
+    
+    # For each enemy in the list of enemies, an aggro box is created. 
+    for enemy_pos in enemy_list:
+        aggro_box_x = enemy_pos[0] - (aggro_range / 2)
+        aggro_box_y = enemy_pos[1] - (aggro_range / 2)
         aggro_box_size = enemy_size + aggro_range
 
+        # The aggro box is checked for a player, using the in_aggro_range function.
         if in_aggro_range(player_pos, aggro_box_x, aggro_box_y, aggro_box_size):
-            if player_pos[0] > pos[0]:
-                pos[0] += 1
-            if player_pos[0] < pos[0]:
-                pos[0] -= 1
-            if player_pos[1] > pos[1]:
-                pos[1] += 1
-            if player_pos[1] < pos[1]:
-                pos[1] -= 1
+
+            # If a player is detected, a relative location is determined by comparing 
+            # the player and enemy x and y locations (player_pos[0], player_pos[1]).
+            # The enemy is then moved to minimize the relative distance. For example:
+            # If the player X location is greater than the enemy X location, the enemy
+            # X will be increased by enemy_speed every tick until the distance is zero.
+            if player_pos[0] > enemy_pos[0]: enemy_pos[0] += enemy_speed
+            if player_pos[0] < enemy_pos[0]: enemy_pos[0] -= enemy_speed
+            if player_pos[1] > enemy_pos[1]: enemy_pos[1] += enemy_speed
+            if player_pos[1] < enemy_pos[1]: enemy_pos[1] -= enemy_speed
 
         pygame.draw.rect(screen, (AGGRO_RANGE_COLOR), (int(aggro_box_x), int(aggro_box_y), aggro_box_size, aggro_box_size))
-        pygame.draw.rect(screen, (ENEMY_COLOR), (pos[0], pos[1], enemy_size, enemy_size))
 
-def move_player(player_pos):
+    # A seperate loop here prevents aggro boxes from being drawn over adjacent enemies
+    for enemy_pos in enemy_list:
+        pygame.draw.rect(screen, (ENEMY_COLOR), (enemy_pos[0], enemy_pos[1], enemy_size, enemy_size))
+
+def move_player(player_pos, PLAYER_SPEED):
+
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_a]:
-        player_pos[0] -= 3
-
-    if keys[pygame.K_d]:
-        player_pos[0] += 3
-
-    if keys[pygame.K_w]:
-        player_pos[1] -= 3
-    
-    if keys[pygame.K_s]:
-        player_pos[1] += 3
+    if keys[pygame.K_a]: player_pos[0] -= PLAYER_SPEED
+    if keys[pygame.K_d]: player_pos[0] += PLAYER_SPEED
+    if keys[pygame.K_w]: player_pos[1] -= PLAYER_SPEED
+    if keys[pygame.K_s]: player_pos[1] += PLAYER_SPEED
     
     pygame.draw.rect(screen, (PLAYER_COLOR), (player_pos[0], player_pos[1], player_size, player_size))
 
@@ -103,11 +112,20 @@ def lose_health(player_health, current_time, time_hit):
 
 def draw_health(player_health):
     for health in range(0, player_health[0]):
-        pygame.draw.circle(screen, (200,50,50), (20 + (health * 30), 20), 10)
-        
+        pygame.draw.circle(screen, (250,50,50), (20 + (health * 30), 20), 10)
 
-    
 
+def spawn_enemies(enemy_list, player_pos, ENEMY_SPAWN_DISTANCE):
+    if len(enemy_list) <= 5:
+        if random.random() < 0.01:
+            new_enemy_x = random.randint(0, WIDTH)
+            new_enemy_y = random.randint(0, HEIGHT)
+            if new_enemy_x < (player_pos[0] + ENEMY_SPAWN_DISTANCE) and new_enemy_x > (player_pos[0] - ENEMY_SPAWN_DISTANCE):
+                if new_enemy_y < (player_pos[1] + ENEMY_SPAWN_DISTANCE) and new_enemy_y > (player_pos[1] - ENEMY_SPAWN_DISTANCE):
+                    pass
+            else:
+                enemy_list.append([new_enemy_x, new_enemy_y])
+    return enemy_list
 
 
 
@@ -121,24 +139,16 @@ while not game_over:
     screen.fill(background_color[0])
     background_color[0] = (0,0,0)
 
-    
-    move_enemies(enemy_list, player_pos)
-
-    move_player(player_pos)
-
+    spawn_enemies(enemy_list, player_pos, ENEMY_SPAWN_DISTANCE)
+    move_enemies(enemy_list, player_pos, enemy_speed)
+    move_player(player_pos, PLAYER_SPEED)
     draw_health(player_health)
-
 
     if detect_collisions(player_pos, enemy_list, enemy_size):
         if lose_health(player_health, current_time, time_hit):
             game_over = True
-        
-        
-
-
 
     pygame.display.update()
-
     clock.tick(60)
 
 pygame.quit()
