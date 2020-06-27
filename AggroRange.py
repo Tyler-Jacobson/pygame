@@ -16,7 +16,7 @@ PLAYER_SPEED = 3
 enemy_x = 200
 enemy_y = 200
 enemy_size = 20
-enemy_speed = 1
+enemy_speed = 1.5
 aggro_range = 200
 ENEMY_SPAWN_DISTANCE = 200
 
@@ -37,7 +37,6 @@ current_time = 0
 time_hit = [10]
 
 enemy_list = []
-# [enemy_x, enemy_y], [enemy_2_x, enemy_2_y], [600, 600]
 
 # Checks if the player's location (player_pos[0] + (player_size / 2)) is greater than the far left edge of the aggro box, and less than 
 # the far right edge. If this is the case for the x coordinate, the same is then checked for the y coordinate. If both are true, the player 
@@ -65,10 +64,11 @@ def move_enemies(enemy_list, player_pos, enemy_speed):
             # The enemy is then moved to minimize the relative distance. For example:
             # If the player X location is greater than the enemy X location, the enemy
             # X will be increased by enemy_speed every tick until the distance is zero.
-            if player_pos[0] > enemy_pos[0]: enemy_pos[0] += enemy_speed
-            if player_pos[0] < enemy_pos[0]: enemy_pos[0] -= enemy_speed
-            if player_pos[1] > enemy_pos[1]: enemy_pos[1] += enemy_speed
-            if player_pos[1] < enemy_pos[1]: enemy_pos[1] -= enemy_speed
+            state_attack(player_pos, enemy_pos, enemy_speed)
+            enemy_pos[2] = 'attack'
+        else:
+            enemy_pos[2] = 'idle'
+
 
         pygame.draw.rect(screen, (AGGRO_RANGE_COLOR), (int(aggro_box_x), int(aggro_box_y), aggro_box_size, aggro_box_size))
 
@@ -114,18 +114,30 @@ def draw_health(player_health):
     for health in range(0, player_health[0]):
         pygame.draw.circle(screen, (250,50,50), (20 + (health * 30), 20), 10)
 
-
 def spawn_enemies(enemy_list, player_pos, ENEMY_SPAWN_DISTANCE):
-    if len(enemy_list) <= 5:
-        if random.random() < 0.01:
+    if len(enemy_list) < 5:
+        if random.random() < 0.05:
             new_enemy_x = random.randint(0, WIDTH)
             new_enemy_y = random.randint(0, HEIGHT)
             if new_enemy_x < (player_pos[0] + ENEMY_SPAWN_DISTANCE) and new_enemy_x > (player_pos[0] - ENEMY_SPAWN_DISTANCE):
                 if new_enemy_y < (player_pos[1] + ENEMY_SPAWN_DISTANCE) and new_enemy_y > (player_pos[1] - ENEMY_SPAWN_DISTANCE):
                     pass
             else:
-                enemy_list.append([new_enemy_x, new_enemy_y])
+                enemy_list.append([new_enemy_x, new_enemy_y, 'idle'])
+                
     return enemy_list
+
+# States: Idle, Attack, Find_Ally
+def change_states():
+    pass
+
+def state_attack(player_pos, enemy_pos, enemy_speed):
+    if player_pos[0] > enemy_pos[0]: enemy_pos[0] += enemy_speed
+    if player_pos[0] < enemy_pos[0]: enemy_pos[0] -= enemy_speed
+    if player_pos[1] > enemy_pos[1]: enemy_pos[1] += enemy_speed
+    if player_pos[1] < enemy_pos[1]: enemy_pos[1] -= enemy_speed
+    print(enemy_list)
+
 
 
 
