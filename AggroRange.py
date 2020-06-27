@@ -19,6 +19,7 @@ enemy_size = 20
 enemy_speed = 1.5
 aggro_range = 200
 ENEMY_SPAWN_DISTANCE = 200
+enemy_spacing = 30
 
 enemy_2_x = 600
 enemy_2_y = 100
@@ -48,26 +49,76 @@ def in_aggro_range(player_pos, aggro_box_x, aggro_box_y, aggro_box_size):
     return False
 
 
-def move_enemies(enemy_list, player_pos, enemy_speed):
+def move_enemies(enemy_list, player_pos, enemy_speed, enemy_spacing):
     
     # For each enemy in the list of enemies, an aggro box is created. 
-    for enemy_pos in enemy_list:
+    for index,enemy_pos in enumerate(enemy_list):
         aggro_box_x = enemy_pos[0] - (aggro_range / 2)
         aggro_box_y = enemy_pos[1] - (aggro_range / 2)
         aggro_box_size = enemy_size + aggro_range
 
+        print(enemy_list)
+
+        try:
+            if enemy_pos[2] == 'group':
+                distance_check = []
+                for index,enemy in enumerate(enemy_list):
+                    location = enemy[0] + enemy[1]
+                    distance = abs((enemy_pos[0] + enemy_pos[1]) - location)
+
+                    if enemy[2] == 'idle':
+                        distance_check.append([distance, index])
+                    distance_check.sort()
+
+                
+                
+            
+                target_index = distance_check[0][1]
+
+                # print(distance_check)
+                # print(distance_check[0][1])
+                # print(enemy_list[target_index][2])
+
+                target_enemy_x = enemy_list[target_index][0]
+                target_enemy_y = enemy_list[target_index][1]
+                if target_enemy_x > enemy_pos[0] + enemy_spacing: enemy_pos[0] += enemy_speed
+                if target_enemy_x < enemy_pos[0] - enemy_spacing: enemy_pos[0] -= enemy_speed
+                if target_enemy_y > enemy_pos[1] + enemy_spacing: enemy_pos[1] += enemy_speed
+                if target_enemy_y < enemy_pos[1] - enemy_spacing: enemy_pos[1] -= enemy_speed
+
+                if target_enemy_x > enemy_pos[0] - enemy_spacing * 2 and target_enemy_x < enemy_pos[0] + enemy_spacing * 2:
+                    if target_enemy_y > enemy_pos[1] - enemy_spacing * 2 and target_enemy_y < enemy_pos[1] + enemy_spacing * 2:
+                        enemy_list[target_index][2] = 'group'
+        except:
+            pass
+            
+        grouped_enemies = 0
+        for enemy_state in enemy_list:
+            if enemy_state[2] == 'group':
+                grouped_enemies += 1
+        
+        if grouped_enemies >= 5:
+            for grouped_enemy in enemy_list:
+                grouped_enemy[2] = 'attack'
+            
+                
+
         # The aggro box is checked for a player, using the in_aggro_range function.
         if in_aggro_range(player_pos, aggro_box_x, aggro_box_y, aggro_box_size):
+
+            if enemy_pos[2] == 'idle':
+                enemy_pos[2] = 'group'
+
 
             # If a player is detected, a relative location is determined by comparing 
             # the player and enemy x and y locations (player_pos[0], player_pos[1]).
             # The enemy is then moved to minimize the relative distance. For example:
             # If the player X location is greater than the enemy X location, the enemy
             # X will be increased by enemy_speed every tick until the distance is zero.
+
+        if enemy_pos[2] == 'attack':
             state_attack(player_pos, enemy_pos, enemy_speed)
-            enemy_pos[2] = 'attack'
-        else:
-            enemy_pos[2] = 'idle'
+
 
 
         pygame.draw.rect(screen, (AGGRO_RANGE_COLOR), (int(aggro_box_x), int(aggro_box_y), aggro_box_size, aggro_box_size))
@@ -127,7 +178,7 @@ def spawn_enemies(enemy_list, player_pos, ENEMY_SPAWN_DISTANCE):
                 
     return enemy_list
 
-# States: Idle, Attack, Find_Ally
+# States: Idle, Attack, Group
 def change_states():
     pass
 
@@ -136,7 +187,7 @@ def state_attack(player_pos, enemy_pos, enemy_speed):
     if player_pos[0] < enemy_pos[0]: enemy_pos[0] -= enemy_speed
     if player_pos[1] > enemy_pos[1]: enemy_pos[1] += enemy_speed
     if player_pos[1] < enemy_pos[1]: enemy_pos[1] -= enemy_speed
-    print(enemy_list)
+    # print(enemy_list)
 
 
 
@@ -152,7 +203,7 @@ while not game_over:
     background_color[0] = (0,0,0)
 
     spawn_enemies(enemy_list, player_pos, ENEMY_SPAWN_DISTANCE)
-    move_enemies(enemy_list, player_pos, enemy_speed)
+    move_enemies(enemy_list, player_pos, enemy_speed, enemy_spacing)
     move_player(player_pos, PLAYER_SPEED)
     draw_health(player_health)
 
